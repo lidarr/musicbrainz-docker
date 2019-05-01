@@ -3,9 +3,11 @@ version: '3'
 volumes:
   pgdata:
     driver: local
-  indexdata:
-    driver: local
   dbdump:
+    driver: local
+  solrdata:
+    driver: local
+  rabbitdata:
     driver: local
 
 services:
@@ -20,8 +22,10 @@ services:
       - ./postgres-dockerfile/postgres.env
     volumes:
       - pgdata:/var/lib/postgresql/data
-    expose:
-      - "5432"
+    ports:
+      - "5432:5432"
+    networks:
+      - metabrainz
 
   musicbrainz:
     build:
@@ -39,26 +43,48 @@ services:
       - MUSICBRAINZ_USE_PROXY=1
     depends_on:
       - db
-      - search
       - redis
+    networks:
+      - metabrainz
 
-  indexer:
-    build: indexer-dockerfile
+  solr:
+    image: ta264/musicbrainz-solr
+    restart: unless-stopped
+    volumes:
+      - solrdata:/opt/solr/server/solr/data
+    ports:
+      - "8983:8983"
+    networks:
+      - metabrainz
+
+  sir:
+    build:
+        context: sir-dockerfile
+    restart: unless-stopped
     depends_on:
       - db
-    volumes:
-      - indexdata:/home/search/indexdata
+      - rabbit
+      - solr
+    networks:
+      - metabrainz
 
-  search:
-    build: search-dockerfile
+  rabbit:
+    image: rabbitmq:3.6
     restart: unless-stopped
-    ports:
-      - "8080:8080"
+    hostname: rabbit
+    environment:
+      RABBITMQ_DEFAULT_USER: "abc"
+      RABBITMQ_DEFAULT_PASS: "abc"
     volumes:
-      - indexdata:/home/search/indexdata
+      - rabbitdata:/var/lib/rabbitmq/mnesia
+    networks:
+      - metabrainz
 
   redis:
     image: redis:3-alpine
     restart: unless-stopped
-    expose:
-      - "6379"
+    networks:
+      - metabrainz
+
+networks:
+  metabrainz:

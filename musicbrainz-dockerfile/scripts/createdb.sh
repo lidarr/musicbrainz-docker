@@ -2,7 +2,7 @@
 
 eval $( perl -Mlocal::lib )
 
-FTP_MB=ftp://ftp.eu.metabrainz.org/pub/musicbrainz
+FTP_MB=ftp://ftp.musicbrainz.org/pub/musicbrainz
 IMPORT="fullexport"
 FETCH_DUMPS=""
 
