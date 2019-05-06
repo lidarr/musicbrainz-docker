@@ -32,15 +32,12 @@ services:
       context: musicbrainz-dockerfile
       args:
         - POSTGRES_VERSION=${POSTGRES_VERSION:-9.5}
-    ports:
-      - "5000:5000"
     volumes:
       - dbdump:/media/dbdump
     restart: unless-stopped
     env_file:
       - ./postgres-dockerfile/postgres.env
     environment:
-      - MUSICBRAINZ_USE_PROXY=1
     depends_on:
       - db
       - redis

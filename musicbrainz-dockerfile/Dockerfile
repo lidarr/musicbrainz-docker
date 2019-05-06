@@ -63,24 +63,14 @@ RUN eval $( perl -Mlocal::lib) && cpanm --notest \
 
 ADD DBDefs.pm /musicbrainz-server/lib/
 ADD scripts/start.sh /start.sh
-ADD scripts/start_mb_renderer.pl /start_mb_renderer.pl
-ADD scripts/crons.conf /crons.conf
-ADD scripts/replication.sh /replication.sh
 ADD scripts/createdb.sh /createdb.sh
 ADD scripts/recreatedb.sh /recreatedb.sh
-ADD scripts/set-token.sh /set-token.sh
-
-# Postgres user/password would be solely needed to compile tests
-ARG POSTGRES_USER=doesntmatteraslongasyoudontcompiletests
-ARG POSTGRES_PASSWORD=doesntmatteraslongasyoudontcompiletests
-RUN cd /musicbrainz-server/ && yarn install --production && \
-    eval $( perl -Mlocal::lib) && /musicbrainz-server/script/compile_resources.sh
 
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-RUN crontab /crons.conf
 
 VOLUME  ["/media/dbdump"]
 WORKDIR /musicbrainz-server
-CMD dockerize -wait tcp://db:5432 -timeout 60s \
+CMD dockerize \
+        -wait tcp://db:5432 -timeout 60s \
         -wait tcp://redis:6379 -timeout 60s \
         /start.sh
